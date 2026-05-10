@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* { box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; }
+
+/* Hide audio controls download button */
+audio::-webkit-media-controls-enclosure { overflow: hidden; }
+audio::-internal-media-controls-download-button { display: none; }
+audio::-webkit-media-controls-panel { width: calc(100% + 30px); }
