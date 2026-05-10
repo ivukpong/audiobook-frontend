@@ -6,7 +6,7 @@ import api from "@/lib/api";
 
 interface FileUploadProps {
   type: "cover" | "media";
-  onUploadComplete: (storageKey: string, fileName: string) => void;
+  onUploadComplete: (storageKey: string, duration?: number) => void;
   isUploading?: boolean;
 }
 
@@ -71,9 +71,9 @@ export default function FileUpload({
         },
       });
 
-      const { storageKey } = response.data;
+      const { storageKey, durationSec } = response.data;
       setSuccess(`✓ Uploaded ${file.name}`);
-      onUploadComplete(storageKey, file.name);
+      onUploadComplete(storageKey, durationSec);
       setFile(null);
       setProgress(0);
       if (fileInputRef.current) fileInputRef.current.value = "";

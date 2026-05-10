@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e8f0fe;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c7d7f9;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="400" height="600" fill="url(#bg)" rx="4"/>
+  <!-- Spine line -->
+  <rect x="0" y="0" width="24" height="600" fill="#b8cbf5" rx="4"/>
+  <!-- Book icon -->
+  <g transform="translate(200,260)" opacity="0.4">
+    <rect x="-60" y="-70" width="120" height="140" rx="8" fill="none" stroke="#5b8af0" stroke-width="6"/>
+    <line x1="-60" y1="-70" x2="-60" y2="70" stroke="#5b8af0" stroke-width="4"/>
+    <line x1="-40" y1="-40" x2="40" y2="-40" stroke="#5b8af0" stroke-width="4" stroke-linecap="round"/>
+    <line x1="-40" y1="-20" x2="40" y2="-20" stroke="#5b8af0" stroke-width="4" stroke-linecap="round"/>
+    <line x1="-40" y1="0" x2="20" y2="0" stroke="#5b8af0" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <!-- Label -->
+  <text x="200" y="370" text-anchor="middle" font-family="system-ui, sans-serif" font-size="18" fill="#8aaae8" opacity="0.7">No cover</text>
+</svg>

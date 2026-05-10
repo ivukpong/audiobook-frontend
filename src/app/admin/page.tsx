@@ -47,7 +47,6 @@ const EMPTY_FORM = {
   coverStorageKey: "",
   price: 0,
   currency: "NGN",
-  durationSec: 0,
   mediaStorageKey: "",
   published: false,
   featured: false,
@@ -56,6 +55,7 @@ const EMPTY_FORM = {
   googlePlayUrl: "",
   audibleUrl: "",
   findawayUrl: "",
+  durationSec: 0,
 };
 
 export default function AdminPage() {
@@ -466,22 +466,27 @@ export default function AdminPage() {
                   <FileUpload
                     type="media"
                     isUploading={uploading}
-                    onUploadComplete={(key) => {
-                      setForm((f) => ({ ...f, mediaStorageKey: key }));
+                    onUploadComplete={(key, duration) => {
+                      setForm((f) => ({
+                        ...f,
+                        mediaStorageKey: key,
+                        durationSec: duration || 0,
+                      }));
                       toast.success("Media file uploaded");
                     }}
                   />
                   {form.mediaStorageKey && (
                     <p className="text-xs text-green-600">
                       ✓ Media uploaded: {form.mediaStorageKey}
+                      {form.durationSec > 0 &&
+                        ` (${Math.floor(form.durationSec / 60)}m ${form.durationSec % 60}s)`}
                     </p>
                   )}
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   {field("price", "Price", "number")}
                   {field("currency", "Currency")}
-                  {field("durationSec", "Duration (seconds)", "number")}
                 </div>
                 <div className="border-t border-gray-100 pt-4">
                   <p className="text-sm font-medium text-gray-600 mb-3">

@@ -1,7 +1,7 @@
-'use client';
-import { useState } from 'react';
-import { Download, X, Smartphone } from 'lucide-react';
-import { usePWAInstall } from '@/hooks/usePWAInstall';
+"use client";
+import { useState } from "react";
+import { Download, X, Smartphone } from "lucide-react";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
 
 export default function PWAInstallBanner() {
   const { canInstall, isInstalled, isIOS, install } = usePWAInstall();
@@ -26,7 +26,8 @@ export default function PWAInstallBanner() {
         <p className="font-semibold text-gray-900 text-sm">Install Audora</p>
         {isIOS ? (
           <p className="text-xs text-gray-500 mt-0.5">
-            Tap <strong>Share</strong> then <strong>Add to Home Screen</strong> to install
+            Tap <strong>Share</strong> then <strong>Add to Home Screen</strong>{" "}
+            to install
           </p>
         ) : (
           <p className="text-xs text-gray-500 mt-0.5">
@@ -40,11 +41,14 @@ export default function PWAInstallBanner() {
             className="mt-2 flex items-center gap-1.5 bg-brand text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-brand-dark transition-colors disabled:opacity-60"
           >
             <Download size={13} />
-            {installing ? 'Installing...' : 'Install app'}
+            {installing ? "Installing..." : "Install app"}
           </button>
         )}
       </div>
-      <button onClick={() => setDismissed(true)} className="text-gray-300 hover:text-gray-500 transition-colors shrink-0">
+      <button
+        onClick={() => setDismissed(true)}
+        className="text-gray-300 hover:text-gray-500 transition-colors shrink-0"
+      >
         <X size={16} />
       </button>
     </div>
