@@ -8,7 +8,7 @@ import api from "@/lib/api";
 import { useAuthStore } from "@/store/auth.store";
 import toast from "react-hot-toast";
 import type { Book } from "@/types";
-import { Clock, ExternalLink, ShoppingCart, Headphones } from "lucide-react";
+import { Clock, ShoppingCart, Headphones } from "lucide-react";
 
 function formatDuration(sec: number) {
   const h = Math.floor(sec / 3600);
@@ -73,34 +73,7 @@ export default function BookDetailPage() {
     }
   };
 
-  const platforms = book
-    ? [
-        {
-          url: book.spotifyUrl,
-          label: "Spotify",
-          bg: "#1DB954",
-          color: "white",
-        },
-        {
-          url: book.appleBooksUrl,
-          label: "Apple Books",
-          bg: "#111",
-          color: "white",
-        },
-        {
-          url: book.googlePlayUrl,
-          label: "Google Play",
-          bg: "#4285F4",
-          color: "white",
-        },
-        {
-          url: book.audibleUrl,
-          label: "Audible",
-          bg: "#F47A1F",
-          color: "white",
-        },
-      ].filter((p) => p.url)
-    : [];
+  const isCloudinaryCover = book?.coverUrl?.includes("res.cloudinary.com/");
 
   if (!book)
     return (
@@ -119,7 +92,7 @@ export default function BookDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-1">
             <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-brand-light shadow-md">
-              {book.coverUrl ? (
+              {isCloudinaryCover ? (
                 <Image
                   src={book.coverUrl}
                   alt={book.title}
@@ -181,28 +154,6 @@ export default function BookDetailPage() {
                   <ShoppingCart size={18} />{" "}
                   {buying ? "Redirecting..." : "Buy now"}
                 </button>
-              </div>
-            )}
-
-            {platforms.length > 0 && (
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-3">
-                  Also available on
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {platforms.map((p) => (
-                    <a
-                      key={p.label}
-                      href={p.url!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ background: p.bg, color: p.color }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium hover:opacity-90 transition-opacity"
-                    >
-                      <ExternalLink size={13} /> {p.label}
-                    </a>
-                  ))}
-                </div>
               </div>
             )}
           </div>

@@ -1,14 +1,8 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { Clock, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import type { Book } from "@/types";
-
-function formatDuration(sec: number) {
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  return h > 0 ? `${h}h ${m}m` : `${m}m`;
-}
 
 function formatPrice(price: number, currency: string) {
   return new Intl.NumberFormat("en-NG", {
@@ -25,17 +19,13 @@ export default function BookCard({
   book: Book;
   owned?: boolean;
 }) {
-  const hasPlatforms =
-    book.spotifyUrl ||
-    book.appleBooksUrl ||
-    book.googlePlayUrl ||
-    book.audibleUrl;
+  const isCloudinaryCover = book.coverUrl?.includes("res.cloudinary.com/");
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:border-brand/40 hover:shadow-sm transition-all">
       <Link href={`/book/${book.id}`}>
         <div className="relative h-48 bg-brand-light overflow-hidden">
-          {book.coverUrl ? (
+          {isCloudinaryCover ? (
             <Image
               src={book.coverUrl}
               alt={book.title}
@@ -65,57 +55,9 @@ export default function BookCard({
             <span className="text-brand font-semibold">
               {formatPrice(book.price, book.currency)}
             </span>
-            <span className="text-xs text-gray-400 flex items-center gap-1">
-              <Clock size={12} />
-              {formatDuration(book.durationSec)}
-            </span>
           </div>
         </div>
       </Link>
-      {hasPlatforms && (
-        <div className="px-4 pb-3 flex gap-1.5 flex-wrap">
-          {book.spotifyUrl && (
-            <a
-              href={book.spotifyUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[11px] bg-[#1DB954] text-white px-2 py-0.5 rounded-full font-medium hover:opacity-90 transition-opacity"
-            >
-              Spotify
-            </a>
-          )}
-          {book.appleBooksUrl && (
-            <a
-              href={book.appleBooksUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[11px] bg-gray-900 text-white px-2 py-0.5 rounded-full font-medium hover:opacity-80 transition-opacity"
-            >
-              Apple Books
-            </a>
-          )}
-          {book.googlePlayUrl && (
-            <a
-              href={book.googlePlayUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[11px] bg-blue-500 text-white px-2 py-0.5 rounded-full font-medium hover:opacity-90 transition-opacity"
-            >
-              Google Play
-            </a>
-          )}
-          {book.audibleUrl && (
-            <a
-              href={book.audibleUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[11px] bg-orange-500 text-white px-2 py-0.5 rounded-full font-medium hover:opacity-90 transition-opacity"
-            >
-              Audible
-            </a>
-          )}
-        </div>
-      )}
     </div>
   );
 }

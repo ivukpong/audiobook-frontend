@@ -50,11 +50,6 @@ const EMPTY_FORM = {
   mediaStorageKey: "",
   published: false,
   featured: false,
-  spotifyUrl: "",
-  appleBooksUrl: "",
-  googlePlayUrl: "",
-  audibleUrl: "",
-  findawayUrl: "",
   durationSec: 0,
 };
 
@@ -121,11 +116,6 @@ export default function AdminPage() {
       mediaStorageKey: (b as any).mediaStorageKey || "",
       published: b.published,
       featured: b.featured,
-      spotifyUrl: b.spotifyUrl || "",
-      appleBooksUrl: b.appleBooksUrl || "",
-      googlePlayUrl: b.googlePlayUrl || "",
-      audibleUrl: b.audibleUrl || "",
-      findawayUrl: b.findawayUrl || "",
     });
     setEditId(b.id);
     setShowForm(true);
@@ -144,20 +134,10 @@ export default function AdminPage() {
 
     setSaving(true);
     try {
-      const normalizeOptionalUrl = (value: string) => {
-        const trimmed = value.trim();
-        return trimmed.length ? trimmed : undefined;
-      };
-
       const payload = {
         ...form,
         price: Number(form.price),
         durationSec: Number(form.durationSec),
-        spotifyUrl: normalizeOptionalUrl(form.spotifyUrl),
-        appleBooksUrl: normalizeOptionalUrl(form.appleBooksUrl),
-        googlePlayUrl: normalizeOptionalUrl(form.googlePlayUrl),
-        audibleUrl: normalizeOptionalUrl(form.audibleUrl),
-        findawayUrl: normalizeOptionalUrl(form.findawayUrl),
       };
       if (editId) {
         await api.patch(`/admin/books/${editId}`, payload);
@@ -316,18 +296,13 @@ export default function AdminPage() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-gray-400 text-xs uppercase">
                 <tr>
-                  {[
-                    "Title",
-                    "Author",
-                    "Price",
-                    "Status",
-                    "Platforms",
-                    "Actions",
-                  ].map((h) => (
-                    <th key={h} className="text-left px-5 py-3 font-medium">
-                      {h}
-                    </th>
-                  ))}
+                  {["Title", "Author", "Price", "Status", "Actions"].map(
+                    (h) => (
+                      <th key={h} className="text-left px-5 py-3 font-medium">
+                        {h}
+                      </th>
+                    ),
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -347,40 +322,7 @@ export default function AdminPage() {
                         {b.published ? "Published" : "Draft"}
                       </span>
                     </td>
-                    <td className="px-5 py-3">
-                      <div className="flex gap-1">
-                        {b.spotifyUrl && (
-                          <span
-                            className="w-2 h-2 rounded-full bg-[#1DB954]"
-                            title="Spotify"
-                          />
-                        )}
-                        {b.appleBooksUrl && (
-                          <span
-                            className="w-2 h-2 rounded-full bg-gray-900"
-                            title="Apple Books"
-                          />
-                        )}
-                        {b.googlePlayUrl && (
-                          <span
-                            className="w-2 h-2 rounded-full bg-blue-500"
-                            title="Google Play"
-                          />
-                        )}
-                        {b.audibleUrl && (
-                          <span
-                            className="w-2 h-2 rounded-full bg-orange-500"
-                            title="Audible"
-                          />
-                        )}
-                        {b.findawayUrl && (
-                          <span
-                            className="w-2 h-2 rounded-full bg-violet-500"
-                            title="Findaway"
-                          />
-                        )}
-                      </div>
-                    </td>
+
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2">
                         <button
@@ -488,18 +430,7 @@ export default function AdminPage() {
                   {field("price", "Price", "number")}
                   {field("currency", "Currency")}
                 </div>
-                <div className="border-t border-gray-100 pt-4">
-                  <p className="text-sm font-medium text-gray-600 mb-3">
-                    Distribution links (optional — Findaway / direct)
-                  </p>
-                  <div className="grid grid-cols-2 gap-4">
-                    {field("spotifyUrl", "Spotify URL")}
-                    {field("appleBooksUrl", "Apple Books URL")}
-                    {field("googlePlayUrl", "Google Play URL")}
-                    {field("audibleUrl", "Audible URL")}
-                    {field("findawayUrl", "Findaway URL")}
-                  </div>
-                </div>
+
                 <div className="flex items-center gap-6 pt-1">
                   <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
                     {field("published", "", "checkbox")} Published

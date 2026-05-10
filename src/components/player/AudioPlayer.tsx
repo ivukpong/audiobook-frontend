@@ -8,8 +8,15 @@ import {
   Volume2,
   VolumeX,
   Maximize2,
+  Download,
+  CheckCircle2,
 } from "lucide-react";
 import api from "@/lib/api";
+import {
+  getOfflineAudio,
+  hasOfflineAudio,
+  saveOfflineAudio,
+} from "@/lib/offlineAudio";
 
 interface Props {
   bookId: string;
@@ -35,6 +42,8 @@ export default function AudioPlayer({
   coverUrl,
   deviceId,
 }: Props) {
+  const isCloudinaryCover = coverUrl?.includes("res.cloudinary.com/");
+
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -45,24 +54,75 @@ export default function AudioPlayer({
   const [error, setError] = useState("");
   const [playbackRate, setPlaybackRate] = useState(1);
   const [fullscreen, setFullscreen] = useState(false);
+  const [isDownloaded, setIsDownloaded] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [offlineMode, setOfflineMode] = useState(false);
   const playerRef = useRef<HTMLDivElement>(null);
   const urlRefreshTimer = useRef<NodeJS.Timeout>();
   const saveTimer = useRef<NodeJS.Timeout>();
+  const offlineObjectUrlRef = useRef<string | null>(null);
+
+  const clearOfflineObjectUrl = useCallback(() => {
+    if (offlineObjectUrlRef.current) {
+      URL.revokeObjectURL(offlineObjectUrlRef.current);
+      offlineObjectUrlRef.current = null;
+    }
+  }, []);
+
+  const refreshDownloadedState = useCallback(async () => {
+    try {
+      const available = await hasOfflineAudio(bookId);
+      setIsDownloaded(available);
+    } catch {
+      setIsDownloaded(false);
+    }
+  }, [bookId]);
+
+  const loadOffline = useCallback(
+    async (seekTo?: number) => {
+      const blob = await getOfflineAudio(bookId);
+      if (!blob) return false;
+
+      const audio = audioRef.current;
+      if (!audio) return false;
+
+      setLoading(true);
+      setError("");
+      setOfflineMode(true);
+      clearTimeout(urlRefreshTimer.current);
+      clearOfflineObjectUrl();
+
+      const objectUrl = URL.createObjectURL(blob);
+      offlineObjectUrlRef.current = objectUrl;
+      const wasPlaying = !audio.paused;
+
+      audio.src = objectUrl;
+      audio.load();
+      if (seekTo !== undefined) audio.currentTime = seekTo;
+      if (wasPlaying) await audio.play().catch(() => undefined);
+
+      setLoading(false);
+      return true;
+    },
+    [bookId, clearOfflineObjectUrl],
+  );
 
   const loadStream = useCallback(
     async (seekTo?: number) => {
       try {
         setLoading(true);
+        setOfflineMode(false);
         const { data } = await api.get(`/playback/stream/${bookId}`, {
           headers: { "x-device-id": deviceId },
         });
         const audio = audioRef.current;
         if (!audio) return;
-        const wasPlaying = playing;
+        const wasPlaying = !audio.paused;
+        clearOfflineObjectUrl();
         audio.src = data.url;
         audio.load();
         if (seekTo !== undefined) audio.currentTime = seekTo;
-        if (wasPlaying) audio.play();
+        if (wasPlaying) await audio.play().catch(() => undefined);
         setLoading(false);
         // Refresh signed URL every 100s (before 120s TTL expires)
         clearTimeout(urlRefreshTimer.current);
@@ -75,22 +135,70 @@ export default function AudioPlayer({
         setLoading(false);
       }
     },
-    [bookId, deviceId, playing],
+    [bookId, deviceId, clearOfflineObjectUrl],
   );
 
   useEffect(() => {
-    // Load saved progress then stream
-    api
-      .get(`/playback/progress/${bookId}`, {
-        headers: { "x-device-id": deviceId },
-      })
-      .then(({ data }) => loadStream(data.progressSec || 0))
-      .catch(() => loadStream(0));
+    let cancelled = false;
+
+    const init = async () => {
+      await refreshDownloadedState();
+
+      let savedProgress = 0;
+      try {
+        const { data } = await api.get(`/playback/progress/${bookId}`, {
+          headers: { "x-device-id": deviceId },
+        });
+        savedProgress = data.progressSec || 0;
+      } catch {
+        savedProgress = 0;
+      }
+
+      if (cancelled) return;
+
+      const loadedOffline = await loadOffline(savedProgress);
+      if (!loadedOffline) {
+        await loadStream(savedProgress);
+      }
+    };
+
+    init();
+
     return () => {
+      cancelled = true;
       clearTimeout(urlRefreshTimer.current);
       clearTimeout(saveTimer.current);
+      clearOfflineObjectUrl();
     };
-  }, []);
+  }, [
+    bookId,
+    deviceId,
+    loadStream,
+    loadOffline,
+    refreshDownloadedState,
+    clearOfflineObjectUrl,
+  ]);
+
+  const downloadForOffline = async () => {
+    try {
+      setDownloading(true);
+      setError("");
+      const { data } = await api.get(`/playback/download/${bookId}`, {
+        headers: { "x-device-id": deviceId },
+        responseType: "blob",
+      });
+
+      const blob = data instanceof Blob ? data : new Blob([data]);
+      await saveOfflineAudio(bookId, blob);
+      setIsDownloaded(true);
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.message || "Failed to download for offline use",
+      );
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const saveProgress = useCallback(() => {
     const t = audioRef.current?.currentTime;
@@ -171,7 +279,7 @@ export default function AudioPlayer({
             <div
               className={`${fullscreen ? "w-32 h-32" : "w-16 h-16"} rounded-lg bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-4xl shrink-0 overflow-hidden shadow-md transition-all duration-200`}
             >
-              {coverUrl ? (
+              {isCloudinaryCover ? (
                 <img
                   src={coverUrl}
                   alt={title}
@@ -197,10 +305,35 @@ export default function AudioPlayer({
               >
                 {formatTime(currentTime)} / {formatTime(duration)}
               </p>
+              {isDownloaded && (
+                <p
+                  className={`text-emerald-600 ${fullscreen ? "text-sm" : "text-xs"} mt-1 font-medium`}
+                >
+                  Available offline
+                </p>
+              )}
             </div>
-            <span className="ml-auto text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium flex items-center gap-1 shrink-0">
-              🔒 Stream
-            </span>
+            <div className="ml-auto flex items-center gap-2 shrink-0">
+              <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium flex items-center gap-1">
+                {offlineMode ? "📥 Offline" : "🔒 Stream"}
+              </span>
+              <button
+                onClick={downloadForOffline}
+                disabled={downloading || isDownloaded}
+                className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-medium flex items-center gap-1 hover:bg-gray-200 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isDownloaded ? (
+                  <>
+                    <CheckCircle2 size={13} /> Saved
+                  </>
+                ) : (
+                  <>
+                    <Download size={13} />{" "}
+                    {downloading ? "Saving..." : "Download"}
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Progress Bar */}
