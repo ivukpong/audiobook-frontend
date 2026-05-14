@@ -56,7 +56,7 @@ export default function BookDetailPage() {
 
   const handleBuy = async () => {
     if (!user) {
-      router.push("/login");
+      router.push(`/login?redirect=/book/${id}`);
       return;
     }
     setBuying(true);
