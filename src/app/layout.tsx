@@ -1,8 +1,16 @@
 import type { Metadata, Viewport } from "next";
+import { Poppins } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import PWAInstallBanner from "@/components/ui/PWAInstallBanner";
 import DevServiceWorkerCleanup from "@/components/ui/DevServiceWorkerCleanup";
 import "./globals.css";
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-poppins",
+  display: "swap",
+});
 
 export const viewport: Viewport = {
   themeColor: "#1D9E75",
@@ -69,7 +77,9 @@ export default function RootLayout({
           href="/icons/icon-192x192.png"
         />
       </head>
-      <body className="bg-gray-50 text-gray-900 min-h-screen">
+      <body
+        className={`${poppins.variable} font-poppins bg-gray-50 text-gray-900 min-h-screen`}
+      >
         <DevServiceWorkerCleanup />
         <Toaster position="top-right" />
         {children}

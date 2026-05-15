@@ -8,6 +8,7 @@ import {
   Volume2,
   VolumeX,
   Maximize2,
+  Minimize2,
   Download,
   CheckCircle2,
 } from "lucide-react";
@@ -264,12 +265,27 @@ export default function AudioPlayer({
     }
   };
 
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      if (!document.fullscreenElement) setFullscreen(false);
+    };
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+  }, []);
+
   const pct = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   const playerContent = (
     <div className="flex flex-col h-full gap-4">
       {error ? (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
+        <div
+          className={`rounded-lg p-4 text-sm border ${
+            fullscreen
+              ? "bg-red-900/30 border-red-700 text-red-300"
+              : "bg-red-50 border-red-200 text-red-700"
+          }`}
+        >
           {error}
         </div>
       ) : (
@@ -277,7 +293,11 @@ export default function AudioPlayer({
           {/* Cover and Info Section */}
           <div className="flex items-center gap-4">
             <div
-              className={`${fullscreen ? "w-32 h-32" : "w-16 h-16"} rounded-lg bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-4xl shrink-0 overflow-hidden shadow-md transition-all duration-200`}
+              className={`${
+                fullscreen
+                  ? "w-32 h-32 from-purple-800/40 to-blue-800/40"
+                  : "w-16 h-16 from-purple-100 to-blue-100"
+              } rounded-lg bg-gradient-to-br flex items-center justify-center text-4xl shrink-0 overflow-hidden shadow-md transition-all duration-200`}
             >
               {isCloudinaryCover ? (
                 <img
@@ -291,36 +311,62 @@ export default function AudioPlayer({
             </div>
             <div className="min-w-0 flex-1">
               <h3
-                className={`font-bold text-gray-900 truncate ${fullscreen ? "text-2xl" : "text-lg"}`}
+                className={`font-bold ${
+                  fullscreen
+                    ? "text-2xl text-white"
+                    : "text-lg text-gray-900 truncate"
+                }`}
               >
                 {title}
               </h3>
               <p
-                className={`text-gray-600 truncate ${fullscreen ? "text-lg" : "text-sm"}`}
+                className={`${
+                  fullscreen
+                    ? "text-lg text-gray-300"
+                    : "text-sm text-gray-600 truncate"
+                }`}
               >
                 {author}
               </p>
               <p
-                className={`text-gray-500 ${fullscreen ? "text-base" : "text-xs"} mt-1`}
+                className={`mt-1 ${
+                  fullscreen
+                    ? "text-base text-gray-400"
+                    : "text-xs text-gray-500"
+                }`}
               >
                 {formatTime(currentTime)} / {formatTime(duration)}
               </p>
               {isDownloaded && (
                 <p
-                  className={`text-emerald-600 ${fullscreen ? "text-sm" : "text-xs"} mt-1 font-medium`}
+                  className={`mt-1 font-medium ${
+                    fullscreen
+                      ? "text-sm text-emerald-400"
+                      : "text-xs text-emerald-600"
+                  }`}
                 >
                   Available offline
                 </p>
               )}
             </div>
             <div className="ml-auto flex items-center gap-2 shrink-0">
-              <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium flex items-center gap-1">
+              <span
+                className={`text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 ${
+                  fullscreen
+                    ? "bg-blue-900/40 text-blue-300"
+                    : "bg-blue-100 text-blue-700"
+                }`}
+              >
                 {offlineMode ? "📥 Offline" : "🔒 Stream"}
               </span>
               <button
                 onClick={downloadForOffline}
                 disabled={downloading || isDownloaded}
-                className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-medium flex items-center gap-1 hover:bg-gray-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                className={`text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 disabled:opacity-60 disabled:cursor-not-allowed ${
+                  fullscreen
+                    ? "bg-white/10 text-gray-300 hover:bg-white/20"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
               >
                 {isDownloaded ? (
                   <>
@@ -344,22 +390,28 @@ export default function AudioPlayer({
               max={duration || 100}
               value={currentTime}
               onChange={seek}
-              className={`w-full bg-gray-200 rounded-full appearance-none cursor-pointer accent-blue-600 ${
+              className={`w-full rounded-full appearance-none cursor-pointer accent-blue-600 ${
                 fullscreen ? "h-3" : "h-2"
               }`}
               style={{
-                background: `linear-gradient(to right, #2563eb 0%, #2563eb ${pct}%, #e5e7eb ${pct}%, #e5e7eb 100%)`,
+                background: fullscreen
+                  ? `linear-gradient(to right, #2563eb 0%, #2563eb ${pct}%, #4b5563 ${pct}%, #4b5563 100%)`
+                  : `linear-gradient(to right, #2563eb 0%, #2563eb ${pct}%, #e5e7eb ${pct}%, #e5e7eb 100%)`,
               }}
             />
           </div>
 
           {/* Playback Controls */}
           <div
-            className={`flex items-center justify-center gap-${fullscreen ? 6 : 3}`}
+            className={`flex items-center justify-center ${fullscreen ? "gap-6" : "gap-3"}`}
           >
             <button
               onClick={() => skip(-15)}
-              className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors p-2 rounded-full"
+              className={`transition-colors p-2 rounded-full ${
+                fullscreen
+                  ? "text-gray-300 hover:text-white hover:bg-white/10"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              }`}
               title="Back 15s"
             >
               <RotateCcw size={fullscreen ? 28 : 20} />
@@ -383,7 +435,11 @@ export default function AudioPlayer({
 
             <button
               onClick={() => skip(30)}
-              className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors p-2 rounded-full"
+              className={`transition-colors p-2 rounded-full ${
+                fullscreen
+                  ? "text-gray-300 hover:text-white hover:bg-white/10"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              }`}
               title="Forward 30s"
             >
               <RotateCw size={fullscreen ? 28 : 20} />
@@ -392,13 +448,17 @@ export default function AudioPlayer({
 
           {/* Volume and Playback Speed Controls */}
           <div
-            className={`flex items-center justify-between gap-${fullscreen ? 6 : 3}`}
+            className={`flex items-center justify-between ${fullscreen ? "gap-6" : "gap-3"}`}
           >
             {/* Volume Control */}
             <div className="flex items-center gap-2 min-w-max">
               <button
                 onClick={toggleMute}
-                className="text-gray-600 hover:text-gray-900 p-1 rounded transition"
+                className={`p-1 rounded transition ${
+                  fullscreen
+                    ? "text-gray-300 hover:text-white"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
               >
                 {volume === 0 ? <VolumeX size={18} /> : <Volume2 size={18} />}
               </button>
@@ -413,7 +473,9 @@ export default function AudioPlayer({
                   setVolume(v);
                   if (audioRef.current) audioRef.current.volume = v;
                 }}
-                className="w-20 h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer accent-blue-600"
+                className={`w-20 h-1.5 rounded-full appearance-none cursor-pointer accent-blue-600 ${
+                  fullscreen ? "bg-gray-600" : "bg-gray-200"
+                }`}
               />
             </div>
 
@@ -426,7 +488,9 @@ export default function AudioPlayer({
                   className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                     playbackRate === rate
                       ? "bg-blue-600 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      : fullscreen
+                        ? "bg-white/10 text-gray-300 hover:bg-white/20"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
                   {rate}x
@@ -437,9 +501,13 @@ export default function AudioPlayer({
             {/* Fullscreen Button */}
             <button
               onClick={toggleFullscreen}
-              className="text-gray-600 hover:text-gray-900 p-1 rounded transition"
+              className={`p-1 rounded transition ${
+                fullscreen
+                  ? "text-gray-300 hover:text-white"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
             >
-              <Maximize2 size={18} />
+              {fullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
             </button>
           </div>
         </>
