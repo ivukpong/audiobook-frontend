@@ -291,96 +291,103 @@ export default function AudioPlayer({
       ) : (
         <>
           {/* Cover and Info Section */}
-          <div className="flex items-center gap-4">
-            <div
-              className={`${
-                fullscreen
-                  ? "w-32 h-32 from-purple-800/40 to-blue-800/40"
-                  : "w-16 h-16 from-purple-100 to-blue-100"
-              } rounded-lg bg-gradient-to-br flex items-center justify-center text-4xl shrink-0 overflow-hidden shadow-md transition-all duration-200`}
-            >
-              {isCloudinaryCover ? (
-                <img
-                  src={coverUrl}
-                  alt={title}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                "📚"
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3
-                className={`font-bold ${
-                  fullscreen
-                    ? "text-2xl text-white"
-                    : "text-lg text-gray-900 truncate"
-                }`}
-              >
-                {title}
-              </h3>
-              <p
-                className={`${
-                  fullscreen
-                    ? "text-lg text-gray-300"
-                    : "text-sm text-gray-600 truncate"
-                }`}
-              >
-                {author}
-              </p>
-              <p
-                className={`mt-1 ${
-                  fullscreen
-                    ? "text-base text-gray-400"
-                    : "text-xs text-gray-500"
-                }`}
-              >
-                {formatTime(currentTime)} / {formatTime(duration)}
-              </p>
-              {isDownloaded && (
-                <p
-                  className={`mt-1 font-medium ${
-                    fullscreen
-                      ? "text-sm text-emerald-400"
-                      : "text-xs text-emerald-600"
-                  }`}
-                >
-                  Available offline
-                </p>
-              )}
-            </div>
-            <div className="ml-auto flex items-center gap-2 shrink-0">
-              <span
-                className={`text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 ${
-                  fullscreen
-                    ? "bg-blue-900/40 text-blue-300"
-                    : "bg-blue-100 text-blue-700"
-                }`}
-              >
-                {offlineMode ? "📥 Offline" : "🔒 Stream"}
-              </span>
-              <button
-                onClick={downloadForOffline}
-                disabled={downloading || isDownloaded}
-                className={`text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 disabled:opacity-60 disabled:cursor-not-allowed ${
-                  fullscreen
-                    ? "bg-white/10 text-gray-300 hover:bg-white/20"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                {isDownloaded ? (
-                  <>
-                    <CheckCircle2 size={13} /> Saved
-                  </>
+          {fullscreen ? (
+            <div className="grid grid-cols-[auto_1fr] gap-6 items-start">
+              <div className="w-32 h-32 rounded-lg bg-gradient-to-br from-purple-800/40 to-blue-800/40 flex items-center justify-center text-4xl shrink-0 overflow-hidden shadow-md">
+                {isCloudinaryCover ? (
+                  <img
+                    src={coverUrl}
+                    alt={title}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
-                  <>
-                    <Download size={13} />{" "}
-                    {downloading ? "Saving..." : "Download"}
-                  </>
+                  "📚"
                 )}
-              </button>
+              </div>
+              <div className="flex flex-col gap-1 min-w-0">
+                <h3 className="font-bold text-2xl text-white">{title}</h3>
+                <p className="text-lg text-gray-300">{author}</p>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <span className="text-base text-gray-400">
+                    {formatTime(currentTime)} / {formatTime(duration)}
+                  </span>
+                  <span className="text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 bg-blue-900/40 text-blue-300">
+                    {offlineMode ? "📥 Offline" : "🔒 Stream"}
+                  </span>
+                  <button
+                    onClick={downloadForOffline}
+                    disabled={downloading || isDownloaded}
+                    className="text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 disabled:opacity-60 disabled:cursor-not-allowed bg-white/10 text-gray-300 hover:bg-white/20"
+                  >
+                    {isDownloaded ? (
+                      <>
+                        <CheckCircle2 size={13} /> Saved
+                      </>
+                    ) : (
+                      <>
+                        <Download size={13} />{" "}
+                        {downloading ? "Saving..." : "Download"}
+                      </>
+                    )}
+                  </button>
+                </div>
+                {isDownloaded && (
+                  <p className="text-sm font-medium text-emerald-400">
+                    Available offline
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-4xl shrink-0 overflow-hidden shadow-md transition-all duration-200">
+                {isCloudinaryCover ? (
+                  <img
+                    src={coverUrl}
+                    alt={title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  "📚"
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-bold text-lg text-gray-900 truncate">
+                  {title}
+                </h3>
+                <p className="text-sm text-gray-600 truncate">{author}</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  {formatTime(currentTime)} / {formatTime(duration)}
+                </p>
+                {isDownloaded && (
+                  <p className="mt-1 font-medium text-xs text-emerald-600">
+                    Available offline
+                  </p>
+                )}
+              </div>
+              <div className="ml-auto flex items-center gap-2 shrink-0">
+                <span className="text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 bg-blue-100 text-blue-700">
+                  {offlineMode ? "📥 Offline" : "🔒 Stream"}
+                </span>
+                <button
+                  onClick={downloadForOffline}
+                  disabled={downloading || isDownloaded}
+                  className="text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 disabled:opacity-60 disabled:cursor-not-allowed bg-gray-100 text-gray-700 hover:bg-gray-200"
+                >
+                  {isDownloaded ? (
+                    <>
+                      <CheckCircle2 size={13} /> Saved
+                    </>
+                  ) : (
+                    <>
+                      <Download size={13} />{" "}
+                      {downloading ? "Saving..." : "Download"}
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Progress Bar */}
           <div className="flex-1 flex flex-col justify-center gap-2">
