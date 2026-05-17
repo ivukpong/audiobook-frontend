@@ -2,12 +2,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Headphones } from 'lucide-react';
+import { Eye, EyeOff, Headphones } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import toast from 'react-hot-toast';
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { register } = useAuthStore();
   const router = useRouter();
@@ -37,17 +38,37 @@ export default function RegisterPage() {
         <h1 className="text-xl font-bold text-gray-900 mb-1">Create account</h1>
         <p className="text-sm text-gray-500 mb-6">Start your audiobook journey</p>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {[
-            { label: 'Full name', key: 'name', type: 'text', placeholder: 'Ini Ukpong' },
-            { label: 'Email', key: 'email', type: 'email', placeholder: 'you@example.com' },
-            { label: 'Password', key: 'password', type: 'password', placeholder: '8+ characters' },
-          ].map(({ label, key, type, placeholder }) => (
-            <div key={key}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-              <input type={type} value={(form as any)[key]} onChange={update(key)} required placeholder={placeholder}
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand" />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
+            <input type="text" value={form.name} onChange={update('name')} required placeholder="Ini Ukpong"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input type="email" value={form.email} onChange={update('email')} required placeholder="you@example.com"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={form.password}
+                onChange={update('password')}
+                required
+                placeholder="8+ characters"
+                className="w-full px-3 py-2.5 pr-10 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
-          ))}
+          </div>
           <button type="submit" disabled={loading}
             className="w-full bg-brand text-white py-2.5 rounded-lg font-medium hover:bg-brand-dark transition-colors disabled:opacity-60">
             {loading ? 'Creating account...' : 'Create account'}
