@@ -94,8 +94,12 @@ function AuthForm() {
         {/* Login Form */}
         {tab === "login" && (
           <>
-            <h1 className="text-xl font-bold text-gray-900 mb-1">Welcome back</h1>
-            <p className="text-sm text-gray-500 mb-6">Access your audiobook library</p>
+            <h1 className="text-xl font-bold text-gray-900 mb-1">
+              Welcome back
+            </h1>
+            <p className="text-sm text-gray-500 mb-6">
+              Access your audiobook library
+            </p>
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -129,7 +133,11 @@ function AuthForm() {
                     className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
                     tabIndex={-1}
                   >
-                    {showLoginPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    {showLoginPassword ? (
+                      <EyeOff size={16} />
+                    ) : (
+                      <Eye size={16} />
+                    )}
                   </button>
                 </div>
               </div>
@@ -157,8 +165,12 @@ function AuthForm() {
         {/* Register Form */}
         {tab === "register" && (
           <>
-            <h1 className="text-xl font-bold text-gray-900 mb-1">Create account</h1>
-            <p className="text-sm text-gray-500 mb-6">Start your audiobook journey</p>
+            <h1 className="text-xl font-bold text-gray-900 mb-1">
+              Create account
+            </h1>
+            <p className="text-sm text-gray-500 mb-6">
+              Start your audiobook journey
+            </p>
             <form onSubmit={handleRegister} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

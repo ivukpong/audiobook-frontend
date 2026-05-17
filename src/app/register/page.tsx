@@ -1,13 +1,13 @@
-'use client';
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Headphones } from 'lucide-react';
-import { useAuthStore } from '@/store/auth.store';
-import toast from 'react-hot-toast';
+"use client";
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff, Headphones } from "lucide-react";
+import { useAuthStore } from "@/store/auth.store";
+import toast from "react-hot-toast";
 
 export default function RegisterPage() {
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { register } = useAuthStore();
@@ -18,15 +18,20 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.password.length < 8) { toast.error('Password must be at least 8 characters'); return; }
+    if (form.password.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
     setLoading(true);
     try {
       await register(form.name, form.email, form.password);
-      toast.success('Account created!');
-      router.push('/store');
+      toast.success("Account created!");
+      router.push("/store");
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Registration failed');
-    } finally { setLoading(false); }
+      toast.error(err?.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,25 +41,45 @@ export default function RegisterPage() {
           <Headphones size={22} /> Audora
         </div>
         <h1 className="text-xl font-bold text-gray-900 mb-1">Create account</h1>
-        <p className="text-sm text-gray-500 mb-6">Start your audiobook journey</p>
+        <p className="text-sm text-gray-500 mb-6">
+          Start your audiobook journey
+        </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
-            <input type="text" value={form.name} onChange={update('name')} required placeholder="Ini Ukpong"
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand" />
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Full name
+            </label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={update("name")}
+              required
+              placeholder="Ini Ukpong"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input type="email" value={form.email} onChange={update('email')} required placeholder="you@example.com"
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand" />
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <input
+              type="email"
+              value={form.email}
+              onChange={update("email")}
+              required
+              placeholder="you@example.com"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
             <div className="relative">
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 value={form.password}
-                onChange={update('password')}
+                onChange={update("password")}
                 required
                 placeholder="8+ characters"
                 className="w-full px-3 py-2.5 pr-10 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
@@ -69,13 +94,22 @@ export default function RegisterPage() {
               </button>
             </div>
           </div>
-          <button type="submit" disabled={loading}
-            className="w-full bg-brand text-white py-2.5 rounded-lg font-medium hover:bg-brand-dark transition-colors disabled:opacity-60">
-            {loading ? 'Creating account...' : 'Create account'}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-brand text-white py-2.5 rounded-lg font-medium hover:bg-brand-dark transition-colors disabled:opacity-60"
+          >
+            {loading ? "Creating account..." : "Create account"}
           </button>
         </form>
         <p className="text-center text-sm text-gray-500 mt-5">
-          Already have an account? <Link href="/login" className="text-brand font-medium hover:underline">Sign in</Link>
+          Already have an account?{" "}
+          <Link
+            href="/login"
+            className="text-brand font-medium hover:underline"
+          >
+            Sign in
+          </Link>
         </p>
       </div>
     </div>
