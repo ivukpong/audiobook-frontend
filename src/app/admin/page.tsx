@@ -52,6 +52,7 @@ const EMPTY_FORM = {
   published: false,
   featured: false,
   durationSec: 0,
+  isChaptered: false,
 };
 
 type ChapterDraft = {
@@ -70,6 +71,7 @@ export default function AdminPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [chapters, setChapters] = useState<ChapterDraft[]>([]);
+  const [useChapterMode, setUseChapterMode] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -99,22 +101,29 @@ export default function AdminPage() {
 
   const load = async () => {
     setLoading(true);
-    const [s, b] = await Promise.all([
-      api.get("/admin/stats"),
-      api.get("/admin/books"),
-    ]);
-    setStats(s.data);
-    setBooks(b.data);
-    setLoading(false);
+    try {
+      const [s, b] = await Promise.all([
+        api.get("/admin/stats"),
+        api.get("/admin/books"),
+      ]);
+      setStats(s.data);
+      setBooks(b.data);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to load admin data");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const openCreate = () => {
     setForm(EMPTY_FORM);
     setChapters([]);
+    setUseChapterMode(false);
     setEditId(null);
     setShowForm(true);
   };
   const openEdit = (b: Book) => {
+    const hasChapters = Boolean((b.chapters || []).length);
     setForm({
       title: b.title,
       author: b.author,
@@ -126,6 +135,7 @@ export default function AdminPage() {
       mediaStorageKey: (b as any).mediaStorageKey || "",
       published: b.published,
       featured: b.featured,
+      isChaptered: hasChapters,
     });
     setChapters(
       (b.chapters || []).map((chapter, index) => ({
@@ -135,6 +145,7 @@ export default function AdminPage() {
         durationSec: chapter.durationSec || 0,
       })),
     );
+    setUseChapterMode(hasChapters);
     setEditId(b.id);
     setShowForm(true);
   };
@@ -188,16 +199,20 @@ export default function AdminPage() {
       toast.error("Book cover is required");
       return;
     }
-    if (!form.mediaStorageKey && chapters.length === 0) {
-      toast.error("Upload a full media file or add at least one chapter");
-      return;
-    }
-
-    const invalidChapter = chapters.find(
-      (chapter) => !chapter.mediaStorageKey || !chapter.title.trim(),
-    );
-    if (invalidChapter) {
-      toast.error("Each chapter needs a title and uploaded audio");
+    if (useChapterMode) {
+      if (chapters.length === 0) {
+        toast.error("Add at least one chapter");
+        return;
+      }
+      const invalidChapter = chapters.find(
+        (chapter) => !chapter.mediaStorageKey || !chapter.title.trim(),
+      );
+      if (invalidChapter) {
+        toast.error("Each chapter needs a title and uploaded audio");
+        return;
+      }
+    } else if (!form.mediaStorageKey) {
+      toast.error("Media file is required for single-file books");
       return;
     }
 
@@ -207,11 +222,14 @@ export default function AdminPage() {
         ...form,
         price: Number(form.price),
         durationSec: Number(form.durationSec),
-        chapters: chapters.map((chapter) => ({
-          title: chapter.title.trim(),
-          mediaStorageKey: chapter.mediaStorageKey,
-          durationSec: Number(chapter.durationSec || 0),
-        })),
+        isChaptered: useChapterMode,
+        chapters: useChapterMode
+          ? chapters.map((chapter) => ({
+              title: chapter.title.trim(),
+              mediaStorageKey: chapter.mediaStorageKey,
+              durationSec: Number(chapter.durationSec || 0),
+            }))
+          : [],
       };
       if (editId) {
         await api.patch(`/admin/books/${editId}`, payload);
@@ -479,35 +497,56 @@ export default function AdminPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <FileUpload
-                    type="media"
-                    isUploading={uploading}
-                    onUploadComplete={(key, duration) => {
-                      setForm((f) => ({
-                        ...f,
-                        mediaStorageKey: key,
-                        durationSec:
-                          chapters.length > 0
-                            ? chapters.reduce(
-                                (sum, chapter) =>
-                                  sum + Number(chapter.durationSec || 0),
-                                0,
-                              )
-                            : duration || 0,
-                      }));
-                      toast.success("Media file uploaded");
-                    }}
-                  />
-                  {form.mediaStorageKey && (
-                    <p className="text-xs text-green-600">
-                      ✓ Media uploaded: {form.mediaStorageKey}
-                      {form.durationSec > 0 &&
-                        ` (${Math.floor(form.durationSec / 60)}m ${form.durationSec % 60}s)`}
-                    </p>
-                  )}
+                  <div className="flex items-center gap-6 py-1">
+                    <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="audioMode"
+                        checked={!useChapterMode}
+                        onChange={() => setUseChapterMode(false)}
+                        className="w-4 h-4 accent-brand"
+                      />
+                      Single audio file
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="audioMode"
+                        checked={useChapterMode}
+                        onChange={() => setUseChapterMode(true)}
+                        className="w-4 h-4 accent-brand"
+                      />
+                      Multiple chapters
+                    </label>
+                  </div>
+
+                  {!useChapterMode ? (
+                    <>
+                      <FileUpload
+                        type="media"
+                        isUploading={uploading}
+                        onUploadComplete={(key, duration) => {
+                          setForm((f) => ({
+                            ...f,
+                            mediaStorageKey: key,
+                            durationSec: duration || 0,
+                          }));
+                          toast.success("Media file uploaded");
+                        }}
+                      />
+                      {form.mediaStorageKey && (
+                        <p className="text-xs text-green-600">
+                          ✓ Media uploaded: {form.mediaStorageKey}
+                          {form.durationSec > 0 &&
+                            ` (${Math.floor(form.durationSec / 60)}m ${form.durationSec % 60}s)`}
+                        </p>
+                      )}
+                    </>
+                  ) : null}
                 </div>
 
-                <div className="border-t border-gray-100 pt-4 space-y-4">
+                {useChapterMode ? (
+                  <div className="border-t border-gray-100 pt-4 space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-800">
@@ -586,7 +625,8 @@ export default function AdminPage() {
                       ))}
                     </div>
                   )}
-                </div>
+                  </div>
+                ) : null}
 
                 <div className="grid grid-cols-2 gap-4">
                   {field("price", "Price", "number")}
