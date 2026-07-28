@@ -476,7 +476,7 @@ export default function AudioPlayer({
                           : "border-gray-200 text-gray-600 hover:bg-gray-50"
                     }`}
                   >
-                    {chapter.order + 1}. {chapter.title}
+                    {chapter.title}
                   </button>
                 ))}
               </div>
