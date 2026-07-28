@@ -5,6 +5,8 @@ import {
   Pause,
   RotateCcw,
   RotateCw,
+  SkipBack,
+  SkipForward,
   Volume2,
   VolumeX,
   Maximize2,
@@ -66,12 +68,22 @@ export default function AudioPlayer({
   const urlRefreshTimer = useRef<NodeJS.Timeout>();
   const saveTimer = useRef<NodeJS.Timeout>();
   const offlineObjectUrlRef = useRef<string | null>(null);
+  const chapterProgressRef = useRef<Map<number, number>>(new Map());
   const hasChapters = chapters.length > 0;
+  const sortedChapters = hasChapters
+    ? [...chapters].sort((a, b) => a.order - b.order)
+    : [];
   const activeChapter = hasChapters
     ? chapters.find((chapter) => chapter.order === activeChapterOrder) ||
       chapters[0]
     : undefined;
   const activeChapterId = activeChapter?.id;
+  const activeChapterIndex = sortedChapters.findIndex(
+    (chapter) => chapter.order === activeChapterOrder,
+  );
+  const hasPrevChapter = activeChapterIndex > 0;
+  const hasNextChapter =
+    activeChapterIndex >= 0 && activeChapterIndex < sortedChapters.length - 1;
 
   const clearOfflineObjectUrl = useCallback(() => {
     if (offlineObjectUrlRef.current) {
@@ -194,6 +206,9 @@ export default function AudioPlayer({
       if (cancelled) return;
 
       const initialSeek = hasChapters ? savedChapterProgress : savedProgress;
+      if (hasChapters) {
+        chapterProgressRef.current.set(savedChapterOrder, savedChapterProgress);
+      }
       const loadedOffline = await loadOffline(initialSeek, savedChapterOrder);
       if (!loadedOffline) {
         await loadStream(initialSeek, savedChapterOrder);
@@ -266,17 +281,40 @@ export default function AudioPlayer({
   }, [bookId, deviceId, activeChapterOrder, chapters, hasChapters]);
 
   const changeChapter = async (chapterOrder: number) => {
-    if (!hasChapters) return;
+    if (!hasChapters || chapterOrder === activeChapterOrder) return;
+
+    const audio = audioRef.current;
+    if (audio) {
+      chapterProgressRef.current.set(activeChapterOrder, audio.currentTime);
+    }
     saveProgress();
-    setCurrentTime(0);
+
+    // Resume where this chapter was left off, or start from the beginning
+    // if it hasn't been opened yet.
+    const seekTo = chapterProgressRef.current.get(chapterOrder) ?? 0;
+    setCurrentTime(seekTo);
     setDuration(0);
 
     if (offlineMode) {
-      await loadOffline(0, chapterOrder);
-      return;
+      await loadOffline(seekTo, chapterOrder);
+    } else {
+      await loadStream(seekTo, chapterOrder);
     }
 
-    await loadStream(0, chapterOrder);
+    try {
+      await audioRef.current?.play();
+      setPlaying(true);
+    } catch {
+      // Autoplay may be blocked until the user interacts with the page.
+    }
+  };
+
+  const goToPrevChapter = () => {
+    if (hasPrevChapter) changeChapter(sortedChapters[activeChapterIndex - 1].order);
+  };
+
+  const goToNextChapter = () => {
+    if (hasNextChapter) changeChapter(sortedChapters[activeChapterIndex + 1].order);
   };
 
   const togglePlay = async () => {
@@ -502,6 +540,20 @@ export default function AudioPlayer({
           <div
             className={`flex items-center justify-center ${fullscreen ? "gap-6" : "gap-3"}`}
           >
+            {hasChapters && (
+              <button
+                onClick={goToPrevChapter}
+                disabled={!hasPrevChapter}
+                className={`transition-colors p-2 rounded-full disabled:opacity-30 disabled:cursor-not-allowed ${
+                  fullscreen
+                    ? "text-gray-300 hover:text-white hover:bg-white/10"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                }`}
+                title="Previous chapter"
+              >
+                <SkipBack size={fullscreen ? 24 : 18} />
+              </button>
+            )}
             <button
               onClick={() => skip(-15)}
               className={`transition-colors p-2 rounded-full ${
@@ -541,6 +593,20 @@ export default function AudioPlayer({
             >
               <RotateCw size={fullscreen ? 28 : 20} />
             </button>
+            {hasChapters && (
+              <button
+                onClick={goToNextChapter}
+                disabled={!hasNextChapter}
+                className={`transition-colors p-2 rounded-full disabled:opacity-30 disabled:cursor-not-allowed ${
+                  fullscreen
+                    ? "text-gray-300 hover:text-white hover:bg-white/10"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                }`}
+                title="Next chapter"
+              >
+                <SkipForward size={fullscreen ? 24 : 18} />
+              </button>
+            )}
           </div>
 
           {/* Volume and Playback Speed Controls */}
