@@ -19,6 +19,7 @@ import {
   TrendingUp,
   ClipboardCheck,
   ExternalLink,
+  X,
 } from "lucide-react";
 
 interface Stats {
@@ -53,6 +54,13 @@ const EMPTY_FORM = {
   durationSec: 0,
 };
 
+type ChapterDraft = {
+  id: string;
+  title: string;
+  mediaStorageKey: string;
+  durationSec: number;
+};
+
 export default function AdminPage() {
   const { user, fetchMe, loading: authLoading } = useAuthStore();
   const router = useRouter();
@@ -61,6 +69,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [chapters, setChapters] = useState<ChapterDraft[]>([]);
   const [editId, setEditId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -101,6 +110,7 @@ export default function AdminPage() {
 
   const openCreate = () => {
     setForm(EMPTY_FORM);
+    setChapters([]);
     setEditId(null);
     setShowForm(true);
   };
@@ -117,8 +127,59 @@ export default function AdminPage() {
       published: b.published,
       featured: b.featured,
     });
+    setChapters(
+      (b.chapters || []).map((chapter, index) => ({
+        id: chapter.id || `${b.id}-${index}`,
+        title: chapter.title || `Chapter ${index + 1}`,
+        mediaStorageKey: chapter.mediaStorageKey || "",
+        durationSec: chapter.durationSec || 0,
+      })),
+    );
     setEditId(b.id);
     setShowForm(true);
+  };
+
+  const recalculateDuration = (nextChapters: ChapterDraft[]) => {
+    const sum = nextChapters.reduce(
+      (total, chapter) => total + Number(chapter.durationSec || 0),
+      0,
+    );
+    if (sum > 0) {
+      setForm((f) => ({ ...f, durationSec: sum }));
+    }
+  };
+
+  const addChapter = () => {
+    setChapters((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        title: `Chapter ${prev.length + 1}`,
+        mediaStorageKey: "",
+        durationSec: 0,
+      },
+    ]);
+  };
+
+  const removeChapter = (chapterId: string) => {
+    setChapters((prev) => {
+      const next = prev.filter((chapter) => chapter.id !== chapterId);
+      recalculateDuration(next);
+      return next;
+    });
+  };
+
+  const updateChapter = (
+    chapterId: string,
+    updater: (chapter: ChapterDraft) => ChapterDraft,
+  ) => {
+    setChapters((prev) => {
+      const next = prev.map((chapter) =>
+        chapter.id === chapterId ? updater(chapter) : chapter,
+      );
+      recalculateDuration(next);
+      return next;
+    });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -127,8 +188,16 @@ export default function AdminPage() {
       toast.error("Book cover is required");
       return;
     }
-    if (!form.mediaStorageKey) {
-      toast.error("Media file is required");
+    if (!form.mediaStorageKey && chapters.length === 0) {
+      toast.error("Upload a full media file or add at least one chapter");
+      return;
+    }
+
+    const invalidChapter = chapters.find(
+      (chapter) => !chapter.mediaStorageKey || !chapter.title.trim(),
+    );
+    if (invalidChapter) {
+      toast.error("Each chapter needs a title and uploaded audio");
       return;
     }
 
@@ -138,6 +207,11 @@ export default function AdminPage() {
         ...form,
         price: Number(form.price),
         durationSec: Number(form.durationSec),
+        chapters: chapters.map((chapter) => ({
+          title: chapter.title.trim(),
+          mediaStorageKey: chapter.mediaStorageKey,
+          durationSec: Number(chapter.durationSec || 0),
+        })),
       };
       if (editId) {
         await api.patch(`/admin/books/${editId}`, payload);
@@ -412,7 +486,14 @@ export default function AdminPage() {
                       setForm((f) => ({
                         ...f,
                         mediaStorageKey: key,
-                        durationSec: duration || 0,
+                        durationSec:
+                          chapters.length > 0
+                            ? chapters.reduce(
+                                (sum, chapter) =>
+                                  sum + Number(chapter.durationSec || 0),
+                                0,
+                              )
+                            : duration || 0,
                       }));
                       toast.success("Media file uploaded");
                     }}
@@ -423,6 +504,87 @@ export default function AdminPage() {
                       {form.durationSec > 0 &&
                         ` (${Math.floor(form.durationSec / 60)}m ${form.durationSec % 60}s)`}
                     </p>
+                  )}
+                </div>
+
+                <div className="border-t border-gray-100 pt-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">
+                        Chapters
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Upload chapter-by-chapter audio for better navigation.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addChapter}
+                      className="text-xs px-3 py-1.5 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50"
+                    >
+                      Add chapter
+                    </button>
+                  </div>
+
+                  {chapters.length === 0 ? (
+                    <p className="text-xs text-gray-500">
+                      No chapters yet. You can still use a single full-book media
+                      file above.
+                    </p>
+                  ) : (
+                    <div className="space-y-4">
+                      {chapters.map((chapter, index) => (
+                        <div
+                          key={chapter.id}
+                          className="border border-gray-200 rounded-lg p-3 space-y-3"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <input
+                              type="text"
+                              value={chapter.title}
+                              onChange={(e) =>
+                                updateChapter(chapter.id, (current) => ({
+                                  ...current,
+                                  title: e.target.value,
+                                }))
+                              }
+                              placeholder={`Chapter ${index + 1} title`}
+                              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeChapter(chapter.id)}
+                              className="text-gray-400 hover:text-red-500"
+                              title="Remove chapter"
+                            >
+                              <X size={15} />
+                            </button>
+                          </div>
+
+                          <FileUpload
+                            type="media"
+                            isUploading={uploading}
+                            onUploadComplete={(key, duration) => {
+                              updateChapter(chapter.id, (current) => ({
+                                ...current,
+                                mediaStorageKey: key,
+                                durationSec: duration || 0,
+                              }));
+                              toast.success("Chapter uploaded");
+                            }}
+                          />
+
+                          {chapter.mediaStorageKey ? (
+                            <p className="text-xs text-green-600">
+                              ✓ Uploaded: {chapter.mediaStorageKey}
+                              {chapter.durationSec > 0
+                                ? ` (${Math.floor(chapter.durationSec / 60)}m ${chapter.durationSec % 60}s)`
+                                : ""}
+                            </p>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
 

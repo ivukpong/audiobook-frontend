@@ -2,12 +2,25 @@ export interface User {
   id: string; name: string; email: string;
   role: 'ADMIN' | 'BUYER'; createdAt: string;
 }
+
+export interface BookChapter {
+  id: string;
+  title: string;
+  order: number;
+  durationSec: number;
+  mediaStorageKey?: string;
+}
+
 export interface Book {
   id: string; title: string; author: string; description: string;
   coverUrl: string; price: number; currency: string; durationSec: number;
   featured: boolean; published: boolean;
   spotifyUrl?: string; appleBooksUrl?: string;
   googlePlayUrl?: string; audibleUrl?: string; findawayUrl?: string;
+  chapterCount?: number;
+  chapters?: BookChapter[];
+  coverStorageKey?: string;
+  mediaStorageKey?: string;
   createdAt: string;
 }
 export interface Purchase {

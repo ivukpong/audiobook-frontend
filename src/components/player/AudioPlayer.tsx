@@ -13,6 +13,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import api from "@/lib/api";
+import type { BookChapter } from "@/types";
 import {
   getOfflineAudio,
   hasOfflineAudio,
@@ -25,6 +26,7 @@ interface Props {
   author: string;
   coverUrl?: string;
   deviceId: string;
+  chapters?: BookChapter[];
 }
 
 function formatTime(sec: number) {
@@ -42,6 +44,7 @@ export default function AudioPlayer({
   author,
   coverUrl,
   deviceId,
+  chapters = [],
 }: Props) {
   const isCloudinaryCover = coverUrl?.includes("res.cloudinary.com/");
 
@@ -58,10 +61,17 @@ export default function AudioPlayer({
   const [isDownloaded, setIsDownloaded] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [offlineMode, setOfflineMode] = useState(false);
+  const [activeChapterOrder, setActiveChapterOrder] = useState(0);
   const playerRef = useRef<HTMLDivElement>(null);
   const urlRefreshTimer = useRef<NodeJS.Timeout>();
   const saveTimer = useRef<NodeJS.Timeout>();
   const offlineObjectUrlRef = useRef<string | null>(null);
+  const hasChapters = chapters.length > 0;
+  const activeChapter = hasChapters
+    ? chapters.find((chapter) => chapter.order === activeChapterOrder) ||
+      chapters[0]
+    : undefined;
+  const activeChapterId = activeChapter?.id;
 
   const clearOfflineObjectUrl = useCallback(() => {
     if (offlineObjectUrlRef.current) {
@@ -80,7 +90,7 @@ export default function AudioPlayer({
   }, [bookId]);
 
   const loadOffline = useCallback(
-    async (seekTo?: number) => {
+    async (seekTo?: number, chapterOrderOverride?: number) => {
       const blob = await getOfflineAudio(bookId);
       if (!blob) return false;
 
@@ -100,6 +110,9 @@ export default function AudioPlayer({
       audio.src = objectUrl;
       audio.load();
       if (seekTo !== undefined) audio.currentTime = seekTo;
+      if (chapterOrderOverride !== undefined) {
+        setActiveChapterOrder(chapterOrderOverride);
+      }
       if (wasPlaying) await audio.play().catch(() => undefined);
 
       setLoading(false);
@@ -109,12 +122,17 @@ export default function AudioPlayer({
   );
 
   const loadStream = useCallback(
-    async (seekTo?: number) => {
+    async (seekTo?: number, chapterOrderOverride?: number) => {
       try {
         setLoading(true);
         setOfflineMode(false);
+        const chapter = hasChapters
+          ? chapters.find((item) => item.order === (chapterOrderOverride ?? activeChapterOrder)) ||
+            chapters[0]
+          : undefined;
         const { data } = await api.get(`/playback/stream/${bookId}`, {
           headers: { "x-device-id": deviceId },
+          params: chapter?.id ? { chapterId: chapter.id } : undefined,
         });
         const audio = audioRef.current;
         if (!audio) return;
@@ -123,12 +141,17 @@ export default function AudioPlayer({
         audio.src = data.url;
         audio.load();
         if (seekTo !== undefined) audio.currentTime = seekTo;
+        if (chapterOrderOverride !== undefined) {
+          setActiveChapterOrder(chapterOrderOverride);
+        } else if (typeof data?.chapter?.order === "number") {
+          setActiveChapterOrder(data.chapter.order);
+        }
         if (wasPlaying) await audio.play().catch(() => undefined);
         setLoading(false);
         // Refresh signed URL every 100s (before 120s TTL expires)
         clearTimeout(urlRefreshTimer.current);
         urlRefreshTimer.current = setTimeout(
-          () => loadStream(audioRef.current?.currentTime),
+          () => loadStream(audioRef.current?.currentTime, activeChapterOrder),
           100_000,
         );
       } catch (e: any) {
@@ -136,7 +159,14 @@ export default function AudioPlayer({
         setLoading(false);
       }
     },
-    [bookId, deviceId, clearOfflineObjectUrl],
+    [
+      bookId,
+      deviceId,
+      clearOfflineObjectUrl,
+      chapters,
+      hasChapters,
+      activeChapterOrder,
+    ],
   );
 
   useEffect(() => {
@@ -146,20 +176,27 @@ export default function AudioPlayer({
       await refreshDownloadedState();
 
       let savedProgress = 0;
+      let savedChapterOrder = 0;
+      let savedChapterProgress = 0;
       try {
         const { data } = await api.get(`/playback/progress/${bookId}`, {
           headers: { "x-device-id": deviceId },
         });
         savedProgress = data.progressSec || 0;
+        savedChapterOrder = data.chapterOrder || 0;
+        savedChapterProgress = data.chapterProgressSec || 0;
       } catch {
         savedProgress = 0;
+        savedChapterOrder = 0;
+        savedChapterProgress = 0;
       }
 
       if (cancelled) return;
 
-      const loadedOffline = await loadOffline(savedProgress);
+      const initialSeek = hasChapters ? savedChapterProgress : savedProgress;
+      const loadedOffline = await loadOffline(initialSeek, savedChapterOrder);
       if (!loadedOffline) {
-        await loadStream(savedProgress);
+        await loadStream(initialSeek, savedChapterOrder);
       }
     };
 
@@ -178,6 +215,7 @@ export default function AudioPlayer({
     loadOffline,
     refreshDownloadedState,
     clearOfflineObjectUrl,
+    hasChapters,
   ]);
 
   const downloadForOffline = async () => {
@@ -186,6 +224,7 @@ export default function AudioPlayer({
       setError("");
       const { data } = await api.get(`/playback/download/${bookId}`, {
         headers: { "x-device-id": deviceId },
+        params: activeChapterId ? { chapterId: activeChapterId } : undefined,
         responseType: "blob",
       });
 
@@ -204,15 +243,41 @@ export default function AudioPlayer({
   const saveProgress = useCallback(() => {
     const t = audioRef.current?.currentTime;
     if (t && t > 0) {
+      const safeTime = Math.floor(t);
+      const chapterDurationSum = chapters
+        .filter((chapter) => chapter.order < activeChapterOrder)
+        .reduce((sum, chapter) => sum + Number(chapter.durationSec || 0), 0);
+      const absoluteProgress = hasChapters
+        ? chapterDurationSum + safeTime
+        : safeTime;
+
       api
         .post(
           `/playback/progress/${bookId}`,
-          { progressSec: Math.floor(t) },
+          {
+            progressSec: absoluteProgress,
+            chapterOrder: activeChapterOrder,
+            chapterProgressSec: safeTime,
+          },
           { headers: { "x-device-id": deviceId } },
         )
         .catch(() => {});
     }
-  }, [bookId, deviceId]);
+  }, [bookId, deviceId, activeChapterOrder, chapters, hasChapters]);
+
+  const changeChapter = async (chapterOrder: number) => {
+    if (!hasChapters) return;
+    saveProgress();
+    setCurrentTime(0);
+    setDuration(0);
+
+    if (offlineMode) {
+      await loadOffline(0, chapterOrder);
+      return;
+    }
+
+    await loadStream(0, chapterOrder);
+  };
 
   const togglePlay = async () => {
     const audio = audioRef.current;
@@ -391,6 +456,31 @@ export default function AudioPlayer({
 
           {/* Progress Bar */}
           <div className="flex-1 flex flex-col justify-center gap-2">
+            {hasChapters && (
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <span
+                  className={`text-xs ${fullscreen ? "text-gray-300" : "text-gray-500"}`}
+                >
+                  Chapter:
+                </span>
+                {chapters.map((chapter) => (
+                  <button
+                    key={chapter.id}
+                    type="button"
+                    onClick={() => changeChapter(chapter.order)}
+                    className={`text-xs px-2 py-1 rounded-full border transition-colors ${
+                      chapter.order === activeChapterOrder
+                        ? "bg-blue-600 border-blue-600 text-white"
+                        : fullscreen
+                          ? "border-gray-600 text-gray-300 hover:bg-white/10"
+                          : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {chapter.order + 1}. {chapter.title}
+                  </button>
+                ))}
+              </div>
+            )}
             <input
               type="range"
               min={0}

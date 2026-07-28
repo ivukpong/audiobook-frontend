@@ -114,6 +114,12 @@ export default function BookDetailPage() {
                 <Clock size={14} />
                 {formatDuration(book.durationSec)}
               </span>
+              <span>
+                {book.chapterCount || book.chapters?.length || 1} chapter
+                {(book.chapterCount || book.chapters?.length || 1) > 1
+                  ? "s"
+                  : ""}
+              </span>
             </div>
             <p className="text-gray-600 leading-relaxed mb-6">
               {book.description}
@@ -130,6 +136,7 @@ export default function BookDetailPage() {
                   author={book.author}
                   coverUrl={book.coverUrl}
                   deviceId={deviceId}
+                  chapters={book.chapters || []}
                 />
               </div>
             ) : (
