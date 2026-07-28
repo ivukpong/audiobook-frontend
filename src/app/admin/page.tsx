@@ -606,22 +606,13 @@ export default function AdminPage() {
 
                 {useChapterMode ? (
                   <div className="border-t border-gray-100 pt-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-800">
-                        Chapters
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Upload chapter-by-chapter audio for better navigation.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={addChapter}
-                      className="text-xs px-3 py-1.5 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50"
-                    >
-                      Add chapter
-                    </button>
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">
+                      Chapters
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Upload chapter-by-chapter audio for better navigation.
+                    </p>
                   </div>
 
                   {chapters.length === 0 ? (
@@ -684,6 +675,14 @@ export default function AdminPage() {
                       ))}
                     </div>
                   )}
+
+                  <button
+                    type="button"
+                    onClick={addChapter}
+                    className="text-xs px-3 py-1.5 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50"
+                  >
+                    Add chapter
+                  </button>
                   </div>
                 ) : null}
 
