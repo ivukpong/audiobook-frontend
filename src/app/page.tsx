@@ -38,6 +38,13 @@ export default function HomePage() {
               />
             ))}
           </div>
+        ) : books.length === 0 ? (
+          <section className="rounded-2xl border border-gray-200 bg-white p-8 text-center">
+            <h2 className="text-xl font-semibold text-gray-900">No audiobooks yet</h2>
+            <p className="mt-2 text-sm text-gray-600">
+              The store is currently empty. Please check back later.
+            </p>
+          </section>
         ) : (
           <>
             {featured.length > 0 && (
