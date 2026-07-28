@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import FileUpload from "@/components/FileUpload";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/auth.store";
 import toast from "react-hot-toast";
@@ -81,6 +82,14 @@ export default function AdminPage() {
   const [findawayReadiness, setFindawayReadiness] =
     useState<FindawayReadiness | null>(null);
   const [showFindawayModal, setShowFindawayModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [chapterToRemove, setChapterToRemove] = useState<ChapterDraft | null>(
+    null,
+  );
 
   useEffect(() => {
     fetchMe();
@@ -180,6 +189,20 @@ export default function AdminPage() {
     });
   };
 
+  const requestRemoveChapter = (chapter: ChapterDraft) => {
+    if (chapter.mediaStorageKey) {
+      setChapterToRemove(chapter);
+    } else {
+      removeChapter(chapter.id);
+    }
+  };
+
+  const confirmRemoveChapter = () => {
+    if (!chapterToRemove) return;
+    removeChapter(chapterToRemove.id);
+    setChapterToRemove(null);
+  };
+
   const updateChapter = (
     chapterId: string,
     updater: (chapter: ChapterDraft) => ChapterDraft,
@@ -247,11 +270,23 @@ export default function AdminPage() {
     }
   };
 
-  const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
-    await api.delete(`/admin/books/${id}`);
-    toast.success("Book deleted");
-    load();
+  const requestDelete = (id: string, title: string) => {
+    setDeleteTarget({ id, title });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/admin/books/${deleteTarget.id}`);
+      toast.success("Book deleted");
+      setDeleteTarget(null);
+      load();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to delete book");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const togglePublish = async (b: Book) => {
@@ -443,7 +478,7 @@ export default function AdminPage() {
                           <ClipboardCheck size={15} />
                         </button>
                         <button
-                          onClick={() => handleDelete(b.id, b.title)}
+                          onClick={() => requestDelete(b.id, b.title)}
                           className="text-gray-400 hover:text-red-500 transition-colors"
                         >
                           <Trash2 size={15} />
@@ -592,7 +627,7 @@ export default function AdminPage() {
                             />
                             <button
                               type="button"
-                              onClick={() => removeChapter(chapter.id)}
+                              onClick={() => requestRemoveChapter(chapter)}
                               className="text-gray-400 hover:text-red-500"
                               title="Remove chapter"
                             >
@@ -752,6 +787,33 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+
+        <ConfirmModal
+          open={Boolean(deleteTarget)}
+          title="Delete book"
+          message={
+            deleteTarget
+              ? `Delete "${deleteTarget.title}"? This cannot be undone.`
+              : ""
+          }
+          confirmLabel="Delete"
+          loading={deleting}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
+
+        <ConfirmModal
+          open={Boolean(chapterToRemove)}
+          title="Remove chapter"
+          message={
+            chapterToRemove
+              ? `Remove "${chapterToRemove.title}"? Its uploaded audio reference will be discarded.`
+              : ""
+          }
+          confirmLabel="Remove"
+          onConfirm={confirmRemoveChapter}
+          onCancel={() => setChapterToRemove(null)}
+        />
       </main>
     </>
   );
