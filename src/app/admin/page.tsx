@@ -87,6 +87,8 @@ export default function AdminPage() {
     title: string;
   } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showUnpublishAll, setShowUnpublishAll] = useState(false);
+  const [unpublishingAll, setUnpublishingAll] = useState(false);
   const [chapterToRemove, setChapterToRemove] = useState<ChapterDraft | null>(
     null,
   );
@@ -289,6 +291,20 @@ export default function AdminPage() {
     }
   };
 
+  const confirmUnpublishAll = async () => {
+    setUnpublishingAll(true);
+    try {
+      const { data } = await api.patch("/admin/books/unpublish-all");
+      toast.success(`Unpublished ${data.count} book${data.count === 1 ? "" : "s"}`);
+      setShowUnpublishAll(false);
+      load();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to unpublish books");
+    } finally {
+      setUnpublishingAll(false);
+    }
+  };
+
   const togglePublish = async (b: Book) => {
     await api.patch(`/admin/books/${b.id}`, { published: !b.published });
     toast.success(b.published ? "Unpublished" : "Published");
@@ -388,12 +404,20 @@ export default function AdminPage() {
       <main className="max-w-6xl mx-auto px-4 py-10">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-          <button
-            onClick={openCreate}
-            className="flex items-center gap-2 bg-brand text-white px-4 py-2.5 rounded-lg font-medium hover:bg-brand-dark transition-colors text-sm"
-          >
-            <Plus size={16} /> Add book
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowUnpublishAll(true)}
+              className="flex items-center gap-2 border border-gray-200 text-gray-600 px-4 py-2.5 rounded-lg font-medium hover:bg-gray-50 transition-colors text-sm"
+            >
+              <EyeOff size={16} /> Unpublish all
+            </button>
+            <button
+              onClick={openCreate}
+              className="flex items-center gap-2 bg-brand text-white px-4 py-2.5 rounded-lg font-medium hover:bg-brand-dark transition-colors text-sm"
+            >
+              <Plus size={16} /> Add book
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -787,6 +811,16 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+
+        <ConfirmModal
+          open={showUnpublishAll}
+          title="Unpublish all books"
+          message="This will hide every currently published book from the storefront. You can re-publish books individually afterwards. Continue?"
+          confirmLabel="Unpublish all"
+          loading={unpublishingAll}
+          onConfirm={confirmUnpublishAll}
+          onCancel={() => setShowUnpublishAll(false)}
+        />
 
         <ConfirmModal
           open={Boolean(deleteTarget)}
