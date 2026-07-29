@@ -96,7 +96,7 @@ export default function LibraryPage() {
     <>
       <Navbar />
       <main className="max-w-6xl mx-auto px-4 py-10">
-        <div className="flex items-center gap-2 mb-8">
+        <div className="flex flex-wrap items-center gap-2 mb-8">
           <Library size={22} className="text-brand" />
           <h1 className="text-2xl font-bold text-gray-900">My Library</h1>
           {!loading && (
@@ -107,11 +107,11 @@ export default function LibraryPage() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="bg-gray-100 rounded-xl h-64 animate-pulse"
+                className="bg-gray-100 rounded-xl aspect-[3/4] animate-pulse"
               />
             ))}
           </div>
@@ -135,7 +135,7 @@ export default function LibraryPage() {
           <div className="space-y-8">
             {downloadedPurchases.length > 0 && (
               <section className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 md:p-5">
-                <div className="flex items-center justify-between gap-3 mb-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                   <div className="flex items-center gap-2">
                     <Download size={18} className="text-emerald-700" />
                     <h2 className="text-base font-semibold text-emerald-900">
@@ -188,7 +188,7 @@ export default function LibraryPage() {
               <h2 className="text-base font-semibold text-gray-900 mb-4">
                 All Purchased Books
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
                 {purchases.map((p) => (
                   <BookCard key={p.id} book={p.book} owned />
                 ))}

@@ -24,16 +24,17 @@ export default function BookCard({
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:border-brand/40 hover:shadow-sm transition-all">
       <Link href={`/book/${book.id}`}>
-        <div className="relative h-48 bg-brand-light overflow-hidden">
+        <div className="relative aspect-[3/4] bg-brand-light overflow-hidden">
           {isCloudinaryCover ? (
             <Image
               src={book.coverUrl}
               alt={book.title}
               fill
+              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover"
             />
           ) : (
-            <div className="h-full flex items-center justify-center text-5xl">
+            <div className="h-full flex items-center justify-center text-4xl sm:text-5xl">
               📖
             </div>
           )}
@@ -48,11 +49,15 @@ export default function BookCard({
             </span>
           )}
         </div>
-        <div className="p-4">
-          <p className="font-medium text-gray-900 line-clamp-1">{book.title}</p>
-          <p className="text-sm text-gray-500 mt-0.5">{book.author}</p>
-          <div className="flex items-center justify-between mt-3">
-            <span className="text-brand font-semibold">
+        <div className="p-3 sm:p-4">
+          <p className="font-medium text-sm sm:text-base text-gray-900 line-clamp-1">
+            {book.title}
+          </p>
+          <p className="text-xs sm:text-sm text-gray-500 mt-0.5 truncate">
+            {book.author}
+          </p>
+          <div className="flex items-center justify-between mt-2 sm:mt-3">
+            <span className="text-brand font-semibold text-sm sm:text-base">
               {formatPrice(book.price, book.currency)}
             </span>
           </div>

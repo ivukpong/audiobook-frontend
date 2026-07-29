@@ -395,8 +395,8 @@ export default function AudioPlayer({
         <>
           {/* Cover and Info Section */}
           {fullscreen ? (
-            <div className="grid grid-cols-[auto_1fr] gap-6 items-start">
-              <div className="w-32 h-32 rounded-lg bg-gradient-to-br from-purple-800/40 to-blue-800/40 flex items-center justify-center text-4xl shrink-0 overflow-hidden shadow-md">
+            <div className="grid grid-cols-[auto_1fr] gap-4 sm:gap-6 items-start">
+              <div className="w-20 h-20 sm:w-32 sm:h-32 rounded-lg bg-gradient-to-br from-purple-800/40 to-blue-800/40 flex items-center justify-center text-4xl shrink-0 overflow-hidden shadow-md">
                 {isCloudinaryCover ? (
                   <img
                     src={coverUrl}
@@ -408,10 +408,14 @@ export default function AudioPlayer({
                 )}
               </div>
               <div className="flex flex-col gap-1 min-w-0">
-                <h3 className="font-bold text-2xl text-white">{title}</h3>
-                <p className="text-lg text-gray-300">{author}</p>
+                <h3 className="font-bold text-xl sm:text-2xl text-white truncate">
+                  {title}
+                </h3>
+                <p className="text-base sm:text-lg text-gray-300 truncate">
+                  {author}
+                </p>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className="text-base text-gray-400">
+                  <span className="text-sm sm:text-base text-gray-400">
                     {formatTime(currentTime)} / {formatTime(duration)}
                   </span>
                   <span className="text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 bg-blue-900/40 text-blue-300">
@@ -442,33 +446,35 @@ export default function AudioPlayer({
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-4xl shrink-0 overflow-hidden shadow-md transition-all duration-200">
-                {isCloudinaryCover ? (
-                  <img
-                    src={coverUrl}
-                    alt={title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  "📚"
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="font-bold text-lg text-gray-900 truncate">
-                  {title}
-                </h3>
-                <p className="text-sm text-gray-600 truncate">{author}</p>
-                <p className="mt-1 text-xs text-gray-500">
-                  {formatTime(currentTime)} / {formatTime(duration)}
-                </p>
-                {isDownloaded && (
-                  <p className="mt-1 font-medium text-xs text-emerald-600">
-                    Available offline
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center text-4xl shrink-0 overflow-hidden shadow-md transition-all duration-200">
+                  {isCloudinaryCover ? (
+                    <img
+                      src={coverUrl}
+                      alt={title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    "📚"
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-bold text-lg text-gray-900 truncate">
+                    {title}
+                  </h3>
+                  <p className="text-sm text-gray-600 truncate">{author}</p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {formatTime(currentTime)} / {formatTime(duration)}
                   </p>
-                )}
+                  {isDownloaded && (
+                    <p className="mt-1 font-medium text-xs text-emerald-600">
+                      Available offline
+                    </p>
+                  )}
+                </div>
               </div>
-              <div className="ml-auto flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2 shrink-0 sm:ml-auto">
                 <span className="text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1 bg-blue-100 text-blue-700">
                   {offlineMode ? "📥 Offline" : "🔒 Stream"}
                 </span>
@@ -538,7 +544,7 @@ export default function AudioPlayer({
 
           {/* Playback Controls */}
           <div
-            className={`flex items-center justify-center ${fullscreen ? "gap-6" : "gap-3"}`}
+            className={`flex items-center justify-center ${fullscreen ? "gap-3 sm:gap-6" : "gap-2 sm:gap-3"}`}
           >
             {hasChapters && (
               <button
@@ -611,10 +617,10 @@ export default function AudioPlayer({
 
           {/* Volume and Playback Speed Controls */}
           <div
-            className={`flex items-center justify-between ${fullscreen ? "gap-6" : "gap-3"}`}
+            className={`flex flex-wrap items-center justify-between ${fullscreen ? "gap-6" : "gap-3"}`}
           >
             {/* Volume Control */}
-            <div className="flex items-center gap-2 min-w-max">
+            <div className="order-1 flex items-center gap-2 min-w-max">
               <button
                 onClick={toggleMute}
                 className={`p-1 rounded transition ${
@@ -636,14 +642,26 @@ export default function AudioPlayer({
                   setVolume(v);
                   if (audioRef.current) audioRef.current.volume = v;
                 }}
-                className={`w-20 h-1.5 rounded-full appearance-none cursor-pointer accent-blue-600 ${
+                className={`w-16 sm:w-20 h-1.5 rounded-full appearance-none cursor-pointer accent-blue-600 ${
                   fullscreen ? "bg-gray-600" : "bg-gray-200"
                 }`}
               />
             </div>
 
+            {/* Fullscreen Button */}
+            <button
+              onClick={toggleFullscreen}
+              className={`order-2 sm:order-3 p-1 rounded transition ${
+                fullscreen
+                  ? "text-gray-300 hover:text-white"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              {fullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+            </button>
+
             {/* Playback Speed Control */}
-            <div className="flex items-center gap-2">
+            <div className="order-3 sm:order-2 w-full sm:w-auto flex items-center justify-center sm:justify-start gap-2">
               {[0.75, 1, 1.25, 1.5, 2].map((rate) => (
                 <button
                   key={rate}
@@ -660,18 +678,6 @@ export default function AudioPlayer({
                 </button>
               ))}
             </div>
-
-            {/* Fullscreen Button */}
-            <button
-              onClick={toggleFullscreen}
-              className={`p-1 rounded transition ${
-                fullscreen
-                  ? "text-gray-300 hover:text-white"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              {fullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-            </button>
           </div>
         </>
       )}
@@ -683,7 +689,7 @@ export default function AudioPlayer({
       ref={playerRef}
       className={`bg-white rounded-xl border border-gray-200 overflow-hidden transition-all duration-300 ${
         fullscreen
-          ? "fixed inset-0 w-screen h-screen rounded-none border-0 z-50 flex flex-col justify-center p-8 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
+          ? "fixed inset-0 w-screen h-screen rounded-none border-0 z-50 flex flex-col justify-center p-4 sm:p-8 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
           : "p-5"
       }`}
     >

@@ -33,7 +33,7 @@ export default function ConfirmModal({
         if (e.target === e.currentTarget && !loading) onCancel();
       }}
     >
-      <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
         <div className="flex items-start gap-3 mb-4">
           <div
             className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${

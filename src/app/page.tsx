@@ -25,16 +25,23 @@ export default function HomePage() {
   return (
     <>
       <Navbar />
-      <main className="max-w-6xl mx-auto px-4 py-10">
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">
-          Audiobook Store
-        </h1>
+      <main className="max-w-6xl mx-auto px-4 py-8 sm:py-10">
+        <section className="mb-8 sm:mb-10 rounded-2xl bg-gradient-to-br from-brand to-brand-dark px-6 py-10 sm:px-10 sm:py-14 text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold max-w-xl">
+            Premium audiobooks, priced in Naira
+          </h1>
+          <p className="mt-2 text-sm sm:text-base text-white/80 max-w-xl">
+            Stream instantly or download for offline listening — own your
+            favorite titles for life.
+          </p>
+        </section>
+
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
             {Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
-                className="bg-gray-100 rounded-xl h-64 animate-pulse"
+                className="bg-gray-100 rounded-xl aspect-[3/4] animate-pulse"
               />
             ))}
           </div>
@@ -52,7 +59,7 @@ export default function HomePage() {
                 <h2 className="text-lg font-semibold text-gray-700 mb-4">
                   Featured
                 </h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
                   {featured.map((b) => (
                     <BookCard key={b.id} book={b} />
                   ))}
@@ -64,7 +71,7 @@ export default function HomePage() {
                 <h2 className="text-lg font-semibold text-gray-700 mb-4">
                   All titles
                 </h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
                   {rest.map((b) => (
                     <BookCard key={b.id} book={b} />
                   ))}

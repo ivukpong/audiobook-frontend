@@ -79,9 +79,21 @@ export default function BookDetailPage() {
     return (
       <>
         <Navbar />
-        <div className="max-w-4xl mx-auto px-4 py-20 text-center text-gray-400">
-          Loading...
-        </div>
+        <main className="max-w-4xl mx-auto px-4 py-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-pulse">
+            <div className="md:col-span-1">
+              <div className="aspect-[3/4] rounded-xl bg-gray-100" />
+            </div>
+            <div className="md:col-span-2 space-y-3">
+              <div className="h-7 w-3/4 rounded bg-gray-100" />
+              <div className="h-4 w-1/3 rounded bg-gray-100" />
+              <div className="h-4 w-full rounded bg-gray-100 mt-4" />
+              <div className="h-4 w-full rounded bg-gray-100" />
+              <div className="h-4 w-2/3 rounded bg-gray-100" />
+              <div className="h-24 w-full rounded-xl bg-gray-100 mt-4" />
+            </div>
+          </div>
+        </main>
       </>
     );
 
@@ -109,7 +121,7 @@ export default function BookDetailPage() {
           <div className="md:col-span-2">
             <h1 className="text-2xl font-bold text-gray-900">{book.title}</h1>
             <p className="text-gray-500 mt-1 mb-4">{book.author}</p>
-            <div className="flex items-center gap-4 text-sm text-gray-400 mb-5">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-400 mb-5">
               <span className="flex items-center gap-1">
                 <Clock size={14} />
                 {formatDuration(book.durationSec)}
@@ -141,7 +153,7 @@ export default function BookDetailPage() {
               </div>
             ) : (
               <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                   <span className="text-2xl font-bold text-gray-900">
                     {new Intl.NumberFormat("en-NG", {
                       style: "currency",

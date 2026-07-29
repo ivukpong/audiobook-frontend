@@ -369,6 +369,40 @@ export default function AdminPage() {
     </div>
   );
 
+  const renderBookActions = (b: Book) => (
+    <div className="flex items-center gap-1">
+      <button
+        onClick={() => togglePublish(b)}
+        title={b.published ? "Unpublish" : "Publish"}
+        className="p-2 rounded-lg text-gray-400 hover:text-brand hover:bg-brand-light/60 transition-colors"
+      >
+        {b.published ? <EyeOff size={15} /> : <Eye size={15} />}
+      </button>
+      <button
+        onClick={() => openEdit(b)}
+        title="Edit"
+        className="p-2 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"
+      >
+        <Pencil size={15} />
+      </button>
+      <button
+        onClick={() => checkFindawayReadiness(b.id)}
+        title="Findaway readiness"
+        className="p-2 rounded-lg text-gray-400 hover:text-violet-500 hover:bg-violet-50 transition-colors"
+        disabled={findawayLoadingId === b.id}
+      >
+        <ClipboardCheck size={15} />
+      </button>
+      <button
+        onClick={() => requestDelete(b.id, b.title)}
+        title="Delete"
+        className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+      >
+        <Trash2 size={15} />
+      </button>
+    </div>
+  );
+
   const statCards = stats
     ? [
         {
@@ -402,18 +436,18 @@ export default function AdminPage() {
     <>
       <Navbar />
       <main className="max-w-6xl mx-auto px-4 py-10">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => setShowUnpublishAll(true)}
-              className="flex items-center gap-2 border border-gray-200 text-gray-600 px-4 py-2.5 rounded-lg font-medium hover:bg-gray-50 transition-colors text-sm"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 border border-gray-200 text-gray-600 px-4 py-2.5 rounded-lg font-medium hover:bg-gray-50 transition-colors text-sm"
             >
               <EyeOff size={16} /> Unpublish all
             </button>
             <button
               onClick={openCreate}
-              className="flex items-center gap-2 bg-brand text-white px-4 py-2.5 rounded-lg font-medium hover:bg-brand-dark transition-colors text-sm"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-brand text-white px-4 py-2.5 rounded-lg font-medium hover:bg-brand-dark transition-colors text-sm"
             >
               <Plus size={16} /> Add book
             </button>
@@ -421,15 +455,17 @@ export default function AdminPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-10">
           {statCards.map((s) => (
             <div
               key={s.label}
-              className="bg-white border border-gray-200 rounded-xl p-4"
+              className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4"
             >
               <div className="text-gray-400 mb-2">{s.icon}</div>
-              <div className="text-2xl font-bold text-gray-900">{s.value}</div>
-              <div className="text-sm text-gray-400">{s.label}</div>
+              <div className="text-xl sm:text-2xl font-bold text-gray-900">
+                {s.value}
+              </div>
+              <div className="text-xs sm:text-sm text-gray-400">{s.label}</div>
             </div>
           ))}
         </div>
@@ -443,76 +479,87 @@ export default function AdminPage() {
             <div className="p-8 text-center text-gray-300 text-sm">
               Loading...
             </div>
+          ) : books.length === 0 ? (
+            <div className="p-8 text-center text-gray-400 text-sm">
+              No books yet. Click "Add book" to create your first title.
+            </div>
           ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-gray-400 text-xs uppercase">
-                <tr>
-                  {["Title", "Author", "Price", "Status", "Actions"].map(
-                    (h) => (
-                      <th key={h} className="text-left px-5 py-3 font-medium">
-                        {h}
-                      </th>
-                    ),
-                  )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
+            <>
+              {/* Mobile card list */}
+              <div className="sm:hidden divide-y divide-gray-50">
                 {books.map((b) => (
-                  <tr key={b.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-5 py-3 font-medium text-gray-900 max-w-[180px] truncate">
-                      {b.title}
-                    </td>
-                    <td className="px-5 py-3 text-gray-500">{b.author}</td>
-                    <td className="px-5 py-3 text-gray-700">
-                      ₦{b.price.toLocaleString()}
-                    </td>
-                    <td className="px-5 py-3">
+                  <div key={b.id} className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 truncate">
+                          {b.title}
+                        </p>
+                        <p className="text-sm text-gray-500 truncate">
+                          {b.author}
+                        </p>
+                      </div>
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${b.published ? "bg-brand-light text-brand" : "bg-gray-100 text-gray-400"}`}
+                        className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${b.published ? "bg-brand-light text-brand" : "bg-gray-100 text-gray-400"}`}
                       >
                         {b.published ? "Published" : "Draft"}
                       </span>
-                    </td>
-
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => togglePublish(b)}
-                          title={b.published ? "Unpublish" : "Publish"}
-                          className="text-gray-400 hover:text-brand transition-colors"
-                        >
-                          {b.published ? (
-                            <EyeOff size={15} />
-                          ) : (
-                            <Eye size={15} />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => openEdit(b)}
-                          className="text-gray-400 hover:text-blue-500 transition-colors"
-                        >
-                          <Pencil size={15} />
-                        </button>
-                        <button
-                          onClick={() => checkFindawayReadiness(b.id)}
-                          title="Findaway readiness"
-                          className="text-gray-400 hover:text-violet-500 transition-colors"
-                          disabled={findawayLoadingId === b.id}
-                        >
-                          <ClipboardCheck size={15} />
-                        </button>
-                        <button
-                          onClick={() => requestDelete(b.id, b.title)}
-                          className="text-gray-400 hover:text-red-500 transition-colors"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-sm text-gray-700">
+                        ₦{b.price.toLocaleString()}
+                      </span>
+                      {renderBookActions(b)}
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-400 text-xs uppercase">
+                    <tr>
+                      {["Title", "Author", "Price", "Status", "Actions"].map(
+                        (h) => (
+                          <th
+                            key={h}
+                            className="text-left px-5 py-3 font-medium"
+                          >
+                            {h}
+                          </th>
+                        ),
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {books.map((b) => (
+                      <tr
+                        key={b.id}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="px-5 py-3 font-medium text-gray-900 max-w-[180px] truncate">
+                          {b.title}
+                        </td>
+                        <td className="px-5 py-3 text-gray-500">
+                          {b.author}
+                        </td>
+                        <td className="px-5 py-3 text-gray-700">
+                          ₦{b.price.toLocaleString()}
+                        </td>
+                        <td className="px-5 py-3">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${b.published ? "bg-brand-light text-brand" : "bg-gray-100 text-gray-400"}`}
+                          >
+                            {b.published ? "Published" : "Draft"}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3">{renderBookActions(b)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
 
@@ -524,12 +571,12 @@ export default function AdminPage() {
               if (e.target === e.currentTarget) setShowForm(false);
             }}
           >
-            <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <h2 className="text-lg font-bold text-gray-900 mb-5">
                 {editId ? "Edit book" : "Add book"}
               </h2>
               <form onSubmit={handleSave} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {field("title", "Title")}
                   {field("author", "Author")}
                 </div>
@@ -556,7 +603,7 @@ export default function AdminPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex items-center gap-6 py-1">
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 py-1">
                     <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
                       <input
                         type="radio"
@@ -686,12 +733,12 @@ export default function AdminPage() {
                   </div>
                 ) : null}
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {field("price", "Price", "number")}
                   {field("currency", "Currency")}
                 </div>
 
-                <div className="flex items-center gap-6 pt-1">
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-1">
                   <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
                     {field("published", "", "checkbox")} Published
                   </label>
@@ -731,8 +778,8 @@ export default function AdminPage() {
               if (e.target === e.currentTarget) setShowFindawayModal(false);
             }}
           >
-            <div className="bg-white rounded-2xl p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-4">
+            <div className="bg-white rounded-2xl p-4 sm:p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                 <h3 className="text-lg font-bold text-gray-900">
                   Findaway Readiness
                 </h3>

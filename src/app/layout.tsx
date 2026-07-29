@@ -8,8 +8,6 @@ export const viewport: Viewport = {
   themeColor: "#1D9E75",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 export const metadata: Metadata = {
@@ -69,7 +67,7 @@ export default function RootLayout({
           href="/icons/icon-192x192.png"
         />
       </head>
-      <body className="font-poppins bg-gray-50 text-gray-900 min-h-screen">
+      <body className="font-poppins bg-gray-50 text-gray-900 min-h-screen overflow-x-hidden">
         <DevServiceWorkerCleanup />
         <Toaster position="top-right" />
         {children}
